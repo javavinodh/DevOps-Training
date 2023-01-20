@@ -1,0 +1,460 @@
+1. basics 
+2. user administration
+3. file administration
+4. rpm tar zip
+5. connect 2 instances and key gen 
+6. sed 
+7. crontab
+
+
+
+1. try to connect with vinodh@ip => will give error
+2. connect with admin@ip => you can't connect with admin user.
+
+=========
+
+There are 3 users in linux 
+
+1. SuperUser or Admin or RootUser => root / administrator
+2. Normal User  => ec2-user,ubuntu , vinodh , sorties.
+3. System User  => ftp , ssh, jenkins 
+
+
+UID , GID , MaIL BOX, HOME DIRECTORY, SHELL, DESIGNATION,PASSWORD
+
+Now lognin with ec2-user 
+
+=> The shell command is created automatically.
+=> 
+
+
+The users information is stored in the below directories.
+
+
+1. /etc/passwd     =>  users stored in this location
+2. /etc/shadow     =>  passwords for users stored here in this location
+3. /etc/group      =>  group details stored here
+4. /etc/gshadow    =>  passwords for groups stored here.
+
+=====
+
+open vi /etc/passwd
+
+root:x:0:0:root:/root:/bin/bash
+ec2-user:x:1000:1000:Cloud User: /home/ec2-user:/bin/bash
+
+userid start with 1000 onwards 
+
+
+create one user: vinodh
+
+$ useradd vinodh
+permission denied // only root user can access
+
+$ sudo -i
+$ sudo su -
+
+# whoami
+root
+
+// now you can run any commands from here.
+
+# useradd vinodh 
+Now you can cat , /etc/passwd and check user vinodh got added . 
+
+#  cat /etc/passwd
+
+ec2-user
+vinodh :x:1001:1001::/home/vinodh:/bin/bash
+
+// now check whether password got created or not 
+// cat shadow file 
+
+# cat /etc/shadow
+ec2-user
+vinodh :!!:18986:0:99999:7:::
+
+//see in the above line some exclamatory mark is there. 
+
+
+// How to set the password to the user.
+
+
+[root@ip]# passwd vinodh
+
+// There are 2 user cases you have to observe while assigning password to any user. 
+
+case 1: 
+
+
+// if you hit passwd it will take current username, i.e., root 
+
+# passwd 
+password for root: 
+new password: ctrl+C (interrrupted)
+
+case-2 
+
+# passwd vinodh
+
+changing password for user vinodh
+New password: 
+
+# /etc/shadow
+e2c-user:!!:
+vinodh: $6$some data:
+
+// create one more user:--
+
+# useradd ramu
+# passwd ramu
+ changing the password for user ramu.
+ add password here.
+
+# /etc/shadow
+if we wants to update things like DESIGNATION you have to use:
+
+usermod commnad:
+
+# usermod
+# usermod --help
+
+// you can see lot of options here will need to explain one by one . 
+
+
+# id // it displays id of current user.
+
+# id vinodh // it displays vinodh id
+
+# id ramu 
+
+// If you want to switch between 
+
+# su - ramu
+
+ramu $ pwd 
+/home/ramu 
+/mailbox also created/assigned to user ramu , i  will show you while deleting the user.
+
+ramu $ pwd 
+/home/ramu
+
+// now I asked ramu to install some softwares like.. vim 
+
+ramu $ yum install vim -y
+
+// permission denied 
+
+
+$ useradd rajini 
+
+// permission denied again , someone tell me what to do now 
+
+// now I am introducing one command called sudo . 
+// sudo means temporatily giving admin rights to normal user. 
+
+ramu $ sudo useradd  rajini 
+
+// Now you are running sudo from user ramu. 
+// Now it will ask password of ramu, 
+//Once you enter you can get message like, user ramu is not in sudoers file. 
+
+steps done so far :
+
+1. created user ramu 
+2. assigned the password to ramu 
+3. we have to add user ramu in sudorers file .
+
+// normally in realtime you have to take a screenshot and attach it to your administrator .
+
+
+// Now add ramu user into sudoers file 
+// Adding ramu into sudoers means you are provideing permissions to run some commands by ramu user.
+// you can restrict users to do some resources in system. 
+
+// admin has to do this work 
+
+// visudo indirecly opens sudoers file . 
+// you have to di it from admin
+
+admin # visudo 
+
+ec2-user ALL=(ALL) NOPASSWD: ALL
+ramu  ALL=(ALL)  ALL 
+
+:wq
+
+
+# visudo 
+# su -ramu
+
+// now you can install what ever you want 
+
+$ sudo yum install vim -y 
+password for ramu: *****
+Now it is insatlling vim .
+
+// in future ansible or jenkins users are going to install thats why this way is very
+// useful.
+
+// Now how to make it password less autherntication.
+// 
+
+// The reason why it is not asking pasword of ec2-user because in sudoeres file 
+// it is mentioned as   NOPAASWD: ALL
+
+# sudo -ramu
+
+$ sudo yum remove vim -y 
+// now without asking password it is running
+
+$ sudo useradd r1
+
+// Now you are able to run admin commands without password on behalf of root. 
+
+
+GROUPS:
+
+
+// similarly you can perform some commmands in groups as well .
+// let us see the some scenarios
+
+
+# cat /etc/group
+// lot of groups are there here . 
+
+# groupadd devops 
+// now devops group got created . 
+
+# cat /etc/gshadow
+// here also you can see groups 
+
+# usermod -G devops vinodh
+
+// now vinodh user is added to devops group .
+
+# cat /etc/gshadow
+
+# usaermod -G devops ramu
+
+# cat /etc/gshadow
+
+// now vinodh ramu got added to devops group 
+
+# useradd u1
+# useradd u2
+# useradd u3 
+# useradd u4 
+
+
+# usermod -G devops u4 
+
+// you cannot add multiple users to group . you have another command for this purpose . 
+
+# gpasswd --help 
+
+#  cat /etc/gshadow
+
+// if already existing group is there and already existing people are there theeeen you can 
+// use this commands. 
+
+# gpasswd -a u1 devops 
+
+// But you want to set new group and add peopl to it . 
+
+# gpaawd -M u2,u3  devops
+
+# gpasswd -M u1,u2,u3,u4 devops 
+
+// Now how to make user admim 
+
+# gpasswd -A vinodh devops 
+
+// Now for devops group vinodh  is the  admin.
+
+useradd  groupadd
+passwd   passwd 
+visudo   gpasswd
+
+how to delete any user or group 
+
+
+
+# groupdel devops
+# userdel vinodh
+
+// userdel will not delete mailbox and home directory  . 
+# cd /var/spool/mail
+
+# userdel -r ramu
+// it will delete home directorey and mailbox also 
+
+# userdel -r ramu  
+
+# useradd rajesh 
+# passwd rajesh
+# visudo 
+
+rajesh ALL=ALL(ALL) NOPASSWD: ALL
+
+# exit 
+
+$ logout  // came out completely from the terminal 
+
+$ ssh -i ".pem" rajesh@---
+permission denied
+
+// by default aws is not allowing to enter with any user except ec2-user.
+// it will not work on username and password concept. It works on private and 
+// public key format.
+// now we have creaed the users , 
+// what are all the changes that allows user rajesh to do on aws so that he can connect .
+
+
+Now wat is the solution 
+
+$ sudo -i 
+# vi etc/ssh/sshd_config
+PasswordAuthentication yes
+# systemctl reload sshd_config 
+
+//provide a service name , not a configuration file.
+# systemctl reload sshd 
+# exit 
+logout 
+
+$ ssh -i ".pem" rajesh@ip ----
+rajesh password : ***
+
+//Now I am able to login with ssh.
+
+// Now you can try with out any .pem file also.
+
+$ ssh rajesh@ec2-ip
+$ passwd
+
+changing password for user rajesh.
+current password:
+New  password: 
+
+password authenticated successfully.....
+===========================   
+
+// suppose rajesh user is leaving a company , Now i wants to lock the user 
+
+
+ec2-user$ sudo -i
+
+# usermod -L rajesh 
+
+open another terminal and see now .
+
+
+# ssh rajesh@
+
+# cat /etc/shadow
+
+ ! $ this exclamation mark tells the user is locked.
+
+# passwd -S rajesh
+// now it is telling user is locked 
+
+# usermod -U rajesh
+
+// verifty whether unlocked or not 
+
+# usermod -S rajesh
+// showing user is unlocked
+===========
+
+How many users are logged in to the machine
+
+$ ps 
+As a root we have to see who are all logged in?
+
+$ who 
+// this tells who are all logged in .
+
+===========
+
+# useradd suma 
+# passwd suma
+
+# visudo 
+
+suma ALL = (ALL) NOPASSWD: ALL
+
+:wq
+
+# chage -d 99999(default value)
+
+root # chage -d 0 suma
+// 0 means immediately user is logged in the passwd must be changes....
+// change the password 
+
+
+# chage -l suma
+// you can see the default values  using this .
+
+# chage suma
+
+  you can modify all the dates here
+
+# chage --help 
+# 
+
+===============================================
+
+ssh, 
+
+1. Create 2 redhat instaances 
+
+  1. using keypair 
+  2. password mechanism
+
+
+Keypair :
+
+In order to work with keypair you need to install openSSH and need to generate keys.
+
+
+$ yum install openSSH
+
+
+
+
+
+  
+
+
+
+
+
+
+ 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
